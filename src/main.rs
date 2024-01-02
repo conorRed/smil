@@ -1,8 +1,8 @@
-use variable::Bernoulli;
+mod graph;
 mod variable;
-fn main(){
-    let b = Bernoulli::new(0.45);
-    println!("{}", b.p());
-    println!("{}", b.q());
-    println!("{}", b.pq());
+
+fn main() {
+    let v1 = variable::Variable::new(0.5);
+    let g = graph::Graph::new(vec![v1]);
+    dbg!(g);
 }

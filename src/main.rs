@@ -22,7 +22,7 @@ impl DiscreteRandomVariable {
     }
 }
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let mut bg = DiGraph::<DiscreteRandomVariable, i32>::new();
 
     let d = bg.add_node(DiscreteRandomVariable::new(
@@ -37,12 +37,15 @@ fn main() {
         String::from("G"),
         vec![0.0, 0.0, 0.0],
     ));
-    bg.add_edge(d, g, 1);
-    bg.add_edge(i, g, 2);
+    bg.add_edge(d, g, 0);
+    bg.add_edge(i, g, 1);
+    save_graph(&bg, "img/bg.dot")?;
+    Ok(())
+}
 
+fn save_graph(bg: &DiGraph<DiscreteRandomVariable, i32>, filename: &str) -> std::io::Result<()> {
     println!("{:?}", Dot::with_config(&bg, &[Config::EdgeNoLabel]));
-    let mut f = File::create("img/bg.dot").unwrap();
+    let mut f = File::create(filename).unwrap();
     let output = format!("{}", Dot::with_config(&bg, &[Config::EdgeNoLabel]));
-    f.write_all(&output.as_bytes())
-        .expect("could not write file");
+    return f.write_all(&output.as_bytes());
 }

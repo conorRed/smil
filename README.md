@@ -14,3 +14,7 @@ of the random variable has an associated probability defined
 
 - Bayesian Network is a pair (G, P) where P _factorizes_ over G.
 - P is a set of CPD's (Conditional Probability Distributions) associated with the nodes in G.
+
+## Converting To PNG using Dot
+
+`dot -T png -O img/<filename>.dot`

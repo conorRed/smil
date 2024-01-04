@@ -1,27 +1,9 @@
+mod lib;
+use lib::DiscreteRandomVariable;
 use petgraph::dot::{Config, Dot};
 use petgraph::graph::DiGraph;
-use std::fmt;
 use std::fs::File;
 use std::io::Write;
-
-#[derive(Debug, Default)]
-struct DiscreteRandomVariable {
-    name: String,
-    domain: Vec<f32>,
-}
-
-impl fmt::Display for DiscreteRandomVariable {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.name)
-    }
-}
-
-impl DiscreteRandomVariable {
-    fn new(name: String, domain: Vec<f32>) -> Self {
-        DiscreteRandomVariable { name, domain }
-    }
-}
-
 fn main() -> std::io::Result<()> {
     let mut bg = DiGraph::<DiscreteRandomVariable, i32>::new();
 
@@ -39,8 +21,7 @@ fn main() -> std::io::Result<()> {
     ));
     bg.add_edge(d, g, 0);
     bg.add_edge(i, g, 1);
-    save_graph(&bg, "img/bg.dot")?;
-    Ok(())
+    return save_graph(&bg, "img/bg.dot");
 }
 
 fn save_graph(bg: &DiGraph<DiscreteRandomVariable, i32>, filename: &str) -> std::io::Result<()> {

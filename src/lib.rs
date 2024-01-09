@@ -4,12 +4,19 @@
 
 // how do we limit the arguments to factor? Is it a simple function?
 
+use petgraph::graph::DiGraph;
 use std::fmt;
 
-#[derive(Debug, Default)]
+// Random Variables can be thought of in set notation, having a cardinality
+#[derive(Debug, Clone)]
 pub struct DiscreteRandomVariable {
     name: String,
     domain: Vec<f32>,
+    cardinality: i32,
+}
+
+trait PMF {
+    fn px(x: i32) -> f32;
 }
 
 impl fmt::Display for DiscreteRandomVariable {
@@ -19,8 +26,48 @@ impl fmt::Display for DiscreteRandomVariable {
 }
 
 impl DiscreteRandomVariable {
-    pub fn new(name: String, domain: Vec<f32>) -> Self {
-        DiscreteRandomVariable { name, domain }
+    pub fn new(name: String, domain: Vec<f32>, cardinality: i32) -> Self {
+        DiscreteRandomVariable {
+            name,
+            domain,
+            cardinality,
+        }
+    }
+
+    //    In general, each variable X in the model is associated with a conditional probability
+    //    distribution (CPD) that specifies a distribution CPD over the values of X given each possible
+    //    joint assignment of values to its parents in the model.
+    pub fn cpd(&self, conditionals: &Vec<DiscreteRandomVariable>) -> DiGraph<f32, &str> {
+        // create a graph of the combinatorial space.
+        let mut combinatorial_space = DiGraph::<f32, &str>::new();
+        // a node for each combination
+        for &d in self.domain.iter() {
+            let node_d = combinatorial_space.add_node(d);
+            // add child nodes of all conditionals
+            for rv in conditionals {
+                for &cd in rv.domain.iter() {
+                    let node_cd = combinatorial_space.add_node(cd);
+                    combinatorial_space.add_edge(node_d, node_cd, "");
+                }
+            }
+        }
+
+        return combinatorial_space;
+    }
+
+    // return sub graph for one combination
+    pub fn inner_cpd(&self, domain_value: f32, conditionals: &Vec<f32>) -> DiGraph<f32, &str> {
+        if conditionals.len() == 0 {
+            return domain_value;
+        }
+        let mut combinatorial_space = DiGraph::<f32, &str>::new();
+        let node_d = combinatorial_space.add_node(d);
+        for &cd in conditionals {
+            let node_cd = combinatorial_space.add_node(cd);
+            combinatorial_space.add_edge(node_d, node_cd, "");
+        }
+
+        return combinatorial_space;
     }
 }
 
@@ -29,13 +76,5 @@ impl DiscreteRandomVariable {
 // JointDistribution is a type for this.
 // Is this a type of Factor?
 
-struct JointDistribution {
-    random_variables: Vec<DiscreteRandomVariable>,
-}
-
-impl JointDistribution {
-    fn entries(&self, fix: DiscreteRandomVariable) {
-        let cols = fix.domain.len();
-        for rv in self.random_variables.iter() {}
-    }
-}
+// How do I get the outcome space of the random variables?
+// Going to try look annnt a local outcome space first.

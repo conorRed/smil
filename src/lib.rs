@@ -41,8 +41,11 @@ impl DiscreteRandomVariable {
         // create a graph of the combinatorial space.
         let mut combinatorial_space = DiGraph::<f32, &str>::new();
         // a node for each combination
+        // a sub tree for each domain value.
         for &d in self.domain.iter() {
-            let node_d = combinatorial_space.add_node(d);
+            // create left
+            // create right
+            let root = combinatorial_space.add_node(d);
             // add child nodes of all conditionals
             for rv in conditionals {
                 for &cd in rv.domain.iter() {
@@ -55,15 +58,29 @@ impl DiscreteRandomVariable {
         return combinatorial_space;
     }
 
-    // return sub graph for one combination
-    pub fn inner_cpd(&self, domain_value: f32, conditionals: &Vec<f32>) -> DiGraph<f32, &str> {
-        if conditionals.len() == 0 {
-            return domain_value;
+    pub fn subtree_(root_value: f32, children: &Vec<f32>) -> DiGraph<f32, &str> {
+        let mut subtree: DiGraph<f32, &str> = DiGraph::<f32, &str>::new();
+        let root = subtree.add_node(root_value);
+        if children.len() == 0 {
+            return subtree;
         }
+        for child in children {
+            subtree.add_node(subtree_(child, ));
+        }
+        return subtree;
+    }
+
+    // return sub graph for one combination
+    // The Garden of Forking paths!
+    pub fn inner_cpd(&self, domain_value: f32, conditionals: &Vec<f32>) -> DiGraph<f32, &str> {
         let mut combinatorial_space = DiGraph::<f32, &str>::new();
-        let node_d = combinatorial_space.add_node(d);
+        let node_d = combinatorial_space.add_node(domain_value);
+        if conditionals.len() == 0 {
+            return combinatorial_space;
+        }
         for &cd in conditionals {
-            let node_cd = combinatorial_space.add_node(cd);
+            let node_cd = cd.cpd(cd, &conditionals[1..]);
+            inner_cpd(cd, )
             combinatorial_space.add_edge(node_d, node_cd, "");
         }
 

@@ -5,15 +5,26 @@
 // how do we limit the arguments to factor? Is it a simple function?
 
 use itertools::Itertools;
+use petgraph::dot::{Config, Dot};
 use petgraph::graph::DiGraph;
+use std::collections::HashMap;
 use std::fmt;
+use std::fs::File;
+use std::io::Write;
 
 // Random Variables can be thought of in set notation, having a cardinality
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DiscreteRandomVariable {
     name: String,
     domain: Vec<i32>,
     cardinality: i32,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Factor<'a> {
+    variables: Vec<&'a DiscreteRandomVariable>,
+    assignment_to_value: HashMap<Vec<i32>, f32>,
+    observed: Option<f32>,
 }
 
 trait PMF {
@@ -26,6 +37,21 @@ impl fmt::Display for DiscreteRandomVariable {
     }
 }
 
+impl Factor<'_> {
+    pub fn new(variables: Vec<&DiscreteRandomVariable>, assign: HashMap<Vec<i32>, f32>) -> Factor {
+        return Factor {
+            variables: variables.to_vec(),
+            assignment_to_value: assign,
+            observed: None,
+        };
+    }
+    pub fn observe(&mut self, row_in_assignments: &Vec<i32>) {
+        if let Some(value) = self.assignment_to_value.get(row_in_assignments) {
+            self.observed = Some(*value);
+        }
+    }
+}
+
 impl DiscreteRandomVariable {
     pub fn new(name: String, domain: Vec<i32>, cardinality: i32) -> Self {
         DiscreteRandomVariable {
@@ -34,46 +60,18 @@ impl DiscreteRandomVariable {
             cardinality,
         }
     }
-
-    //    In general, each variable X in the model is associated with a conditional probability
-    //    distribution (CPD) that specifies a distribution CPD over the values of X given each possible
-    //    joint assignment of values to its parents in the model.
-    pub fn cpd(&self, conditionals: &Vec<DiscreteRandomVariable>) -> () {
-        let mut vec_of_domains: Vec<Vec<i32>> =
-            conditionals.iter().map(|rv| rv.domain.clone()).collect();
-
-        vec_of_domains.push(self.domain.clone());
-        let _outcome_space_size: usize =
-            conditionals.iter().fold(1, |acc, rv| rv.domain.len() * acc) * self.domain.len();
-
-        let cartesian_product: Vec<Vec<&i32>> = vec_of_domains
-            .iter()
-            .multi_cartesian_product()
-            .take(_outcome_space_size)
-            .collect();
-        println!(
-            "Outcome space: {} {:?}",
-            _outcome_space_size, cartesian_product
-        );
-    }
-
-    // return sub graph for one combination
-    // The Garden of Forking paths!
 }
 
-pub fn assignments(conditionals: &Vec<DiscreteRandomVariable>) -> () {
+pub fn assignments(conditionals: &Vec<DiscreteRandomVariable>) -> Vec<Vec<i32>> {
     let vec_of_domains: Vec<Vec<i32>> = conditionals.iter().map(|rv| rv.domain.clone()).collect();
-    let _outcome_space_size: usize = conditionals.iter().fold(1, |acc, rv| rv.domain.len() * acc);
+    let _dimensions: i32 = conditionals.iter().fold(1, |acc, rv| rv.cardinality * acc);
 
-    let cartesian_product: Vec<Vec<&i32>> = vec_of_domains
-        .iter()
+    let cartesian_product: Vec<Vec<i32>> = vec_of_domains
+        .into_iter()
         .multi_cartesian_product()
-        .take(_outcome_space_size)
+        .take(_dimensions as usize)
         .collect();
-    println!(
-        "Outcome space: {} {:?}",
-        _outcome_space_size, cartesian_product
-    );
+    return cartesian_product;
 }
 // Need to think about a state space. What is the 'combinatorial expolsian' of the random variables
 // and do we have a factor across any particular point in this space
@@ -82,3 +80,9 @@ pub fn assignments(conditionals: &Vec<DiscreteRandomVariable>) -> () {
 
 // How do I get the outcome space of the random variables?
 // Going to try look annnt a local outcome space first.
+fn save_graph(bg: &DiGraph<DiscreteRandomVariable, &str>, filename: &str) -> std::io::Result<()> {
+    println!("{:?}", Dot::with_config(&bg, &[Config::EdgeNoLabel]));
+    let mut f = File::create(filename).unwrap();
+    let output = format!("{}", Dot::with_config(&bg, &[Config::EdgeNoLabel]));
+    return f.write_all(&output.as_bytes());
+}
